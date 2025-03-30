@@ -1,0 +1,79 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+class Program
+{
+    static void Main()
+    {
+        var bookService = new CrudService<Book>();
+
+        var book1 = new Book { Title = "C# для початківців", Author = "Іван Іванов", Year = 2023, Pages = 450 };
+        var book2 = new Book { Title = "Алгоритми та структури даних", Author = "Петро Петренко", Year = 2021, Pages = 320 };
+
+        bookService.Create(book1);
+        bookService.Create(book2);
+
+        Console.WriteLine("Список книг у бібліотеці:");
+        foreach (var book in bookService.ReadAll())
+        {
+            Console.WriteLine($"{book.Title} - {book.Author}, {book.Year}, {book.Pages} стор.");
+        }
+
+        Console.WriteLine("\nПошук книги за ID першої книги:");
+        var foundBook = bookService.Read(book1.Id);
+        if (foundBook != null)
+        {
+            Console.WriteLine($"Знайдено: {foundBook.Title} - {foundBook.Author}, {foundBook.Year}, {foundBook.Pages} стор.");
+        }
+
+        book1.Title = "C# для професіоналів";
+        bookService.Update(book1);
+
+        Console.WriteLine("\nОновлений список книг:");
+        foreach (var book in bookService.ReadAll())
+        {
+            Console.WriteLine($"{book.Title} - {book.Author}, {book.Year}, {book.Pages} стор.");
+        }
+
+        bookService.Remove(book2);
+        Console.WriteLine("\nСписок книг після видалення однієї:");
+        foreach (var book in bookService.ReadAll())
+        {
+            Console.WriteLine($"{book.Title} - {book.Author}, {book.Year}, {book.Pages} стор.");
+        }
+
+        Console.WriteLine("\nПрограма завершена. Натисніть Enter для виходу...");
+        Console.ReadLine();
+    }
+}
+
+// Клас книги
+class Book
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Title { get; set; }
+    public string Author { get; set; }
+    public int Year { get; set; }
+    public int Pages { get; set; }
+}
+
+// Генерік CRUD-сервіс
+class CrudService<T> where T : class
+{
+    private readonly List<T> _items = new();
+
+    public void Create(T element) => _items.Add(element);
+    public T Read(Guid id) => _items.FirstOrDefault(e => (e as dynamic).Id == id);
+    public IEnumerable<T> ReadAll() => _items;
+    public void Update(T element)
+    {
+        var existing = Read((element as dynamic).Id);
+        if (existing != null)
+        {
+            _items.Remove(existing);
+            _items.Add(element);
+        }
+    }
+    public void Remove(T element) => _items.Remove(element);
+}
