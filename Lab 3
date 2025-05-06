@@ -1,0 +1,70 @@
+using System;
+using System.Collections.Generic;
+
+class Bus
+{
+    public string Number { get; set; }
+    public List<Trip> Trips { get; set; } = new();
+}
+
+class Trip
+{
+    public string Destination { get; set; }
+    public DateTime DepartureTime { get; set; }
+    public string Platform { get; set; }
+}
+
+class Program
+{
+    static void Main()
+    {
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+
+        var buses = new List<Bus>
+        {
+            new Bus
+            {
+                Number = "A101",
+                Trips = new List<Trip>
+                {
+                    new Trip { Destination = "Київ", DepartureTime = DateTime.Today.AddHours(8), Platform = "1A" },
+                    new Trip { Destination = "Львів", DepartureTime = DateTime.Today.AddHours(10), Platform = "1B" }
+                }
+            },
+            new Bus
+            {
+                Number = "B202",
+                Trips = new List<Trip>
+                {
+                    new Trip { Destination = "Одеса", DepartureTime = DateTime.Today.AddHours(9), Platform = "2A" },
+                    new Trip { Destination = "Харків", DepartureTime = DateTime.Today.AddHours(11), Platform = "2B" }
+                }
+            },
+            new Bus
+            {
+                Number = "C303",
+                Trips = new List<Trip>
+                {
+                    new Trip { Destination = "Полтава", DepartureTime = DateTime.Today.AddHours(12), Platform = "3A" },
+                    new Trip { Destination = "Чернівці", DepartureTime = DateTime.Today.AddHours(14), Platform = "3B" }
+                }
+            }
+        };
+
+        Console.WriteLine("🚏 РОЗКЛАД АВТОБУСІВ НА СЬОГОДНІ");
+        Console.WriteLine("════════════════════════════════════════════════════════════");
+        Console.WriteLine($"{"Номер",-8}│{"Напрямок",-15}│{"Час",-10}│{"Платформа",-10}");
+        Console.WriteLine("────────────────────────────────────────────────────────────");
+
+        foreach (var bus in buses)
+        {
+            foreach (var trip in bus.Trips)
+            {
+                Console.WriteLine($"{bus.Number,-8}│{trip.Destination,-15}│{trip.DepartureTime:HH:mm,-10}│{trip.Platform,-10}");
+            }
+        }
+
+        Console.WriteLine("════════════════════════════════════════════════════════════");
+        Console.WriteLine("✅ Успішної поїздки! Не запізніться ⏰");
+    }
+}
