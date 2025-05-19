@@ -1,0 +1,113 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+// Модель
+public class BusModel
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Brand { get; set; }
+    public int Seats { get; set; }
+}
+
+// Інтерфейс CRUD сервісу
+public interface ICrudServiceAsync<T>
+{
+    Task<bool> CreateAsync(T element);
+    Task<T> ReadAsync(Guid id);
+    Task<IEnumerable<T>> ReadAllAsync();
+    Task<IEnumerable<T>> ReadAllAsync(int page, int amount);
+    Task<bool> UpdateAsync(T element);
+    Task<bool> RemoveAsync(T element);
+    Task<bool> SaveAsync();
+}
+
+// Реалізація CRUD сервісу з "псевдо-БД" (список)
+public class CrudServiceAsync<T> : ICrudServiceAsync<T> where T : BusModel
+{
+    private List<T> _db = new();
+
+    public Task<bool> CreateAsync(T element)
+    {
+        _db.Add(element);
+        return Task.FromResult(true);
+    }
+
+    public Task<T> ReadAsync(Guid id)
+    {
+        return Task.FromResult(_db.FirstOrDefault(e => e.Id == id));
+    }
+
+    public Task<IEnumerable<T>> ReadAllAsync()
+    {
+        return Task.FromResult<IEnumerable<T>>(_db);
+    }
+
+    public Task<IEnumerable<T>> ReadAllAsync(int page, int amount)
+    {
+        return Task.FromResult<IEnumerable<T>>(_db.Skip((page - 1) * amount).Take(amount));
+    }
+
+    public Task<bool> UpdateAsync(T element)
+    {
+        var index = _db.FindIndex(e => e.Id == element.Id);
+        if (index == -1) return Task.FromResult(false);
+        _db[index] = element;
+        return Task.FromResult(true);
+    }
+
+    public Task<bool> RemoveAsync(T element)
+    {
+        return Task.FromResult(_db.Remove(element));
+    }
+
+    public Task<bool> SaveAsync()
+    {
+        return Task.FromResult(true); // Просто заглушка
+    }
+}
+
+// Головна програма
+class Program
+{
+    static async Task Main()
+    {
+        var service = new CrudServiceAsync<BusModel>();
+
+        // CREATE
+        var bus1 = new BusModel { Brand = "Volvo", Seats = 50 };
+        var bus2 = new BusModel { Brand = "MAN", Seats = 45 };
+        await service.CreateAsync(bus1);
+        await service.CreateAsync(bus2);
+        await service.SaveAsync();
+        Console.WriteLine("Created 2 buses.");
+
+        // READ ALL
+        var all = await service.ReadAllAsync();
+        Console.WriteLine("\nAll buses:");
+        foreach (var bus in all)
+            Console.WriteLine($"ID: {bus.Id} | Brand: {bus.Brand} | Seats: {bus.Seats}");
+
+        // READ ONE
+        var readBus = await service.ReadAsync(bus1.Id);
+        Console.WriteLine($"\nRead by ID: {readBus.Id} -> {readBus.Brand}, Seats: {readBus.Seats}");
+
+        // UPDATE
+        readBus.Seats = 55;
+        await service.UpdateAsync(readBus);
+        await service.SaveAsync();
+        Console.WriteLine($"\nUpdated bus {readBus.Id} to {readBus.Seats} seats.");
+
+        // DELETE
+        await service.RemoveAsync(bus2);
+        await service.SaveAsync();
+        Console.WriteLine($"\nDeleted bus {bus2.Id}.");
+
+        // FINAL STATE
+        var final = await service.ReadAllAsync();
+        Console.WriteLine("\nFinal list of buses:");
+        foreach (var bus in final)
+            Console.WriteLine($"ID: {bus.Id} | Brand: {bus.Brand} | Seats: {bus.Seats}");
+    }
+}
